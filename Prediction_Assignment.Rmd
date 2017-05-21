@@ -1,0 +1,83 @@
+---
+title: "Predicting “How Well” People Perform Barbell Lifts"
+author: "Yu-Zhen Tu"
+date: "2017/5/16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align = "center", comment = "", message = FALSE)
+```
+
+## Background
+People often quantify _how much_ they perform exercises, but little investigation focuses on _how well_ they do exercises. This dataset is aimed to study how our body parts move when doing barbell lifts correctly. Further information about the data can be found in "Weight Lifting Exercises Dataset" section of the data source page below.
+
+## Importing Data
+```{r}
+training <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")[,-1]
+testing <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv")[,-1]
+str(training)
+str(testing)
+```
+
+## Data Analyses with Machine Learning Techniques
+### Variable selection
+The "classe" variable in the training set indicates five types of doing barbell lifts, where only type A stands for exactly correct way and the other four types stand for common mistakes.
+
+Here I would like to select pitch/roll/yaw degrees of arm/forearm/dumbbell/belt to discriminate the five types, because I think how the body parts move determines whether people are doing exercises correctly.
+
+### Support vector machine (SVM)
+```{r}
+library(e1071)
+svm_model <- svm(classe ~ pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
+                   roll_arm + roll_forearm + roll_dumbbell + roll_belt +
+                   yaw_arm + yaw_forearm + yaw_dumbbell + yaw_belt, data = training,
+                 scale = FALSE, cross = 10)
+summary(svm_model)
+predict(svm_model, testing[, match(c("pitch_arm", "pitch_forearm", "pitch_dumbbell", "pitch_belt", "roll_arm", "roll_forearm", "roll_dumbbell", "roll_belt", "yaw_arm", "yaw_forearm", "yaw_dumbbell", "yaw_belt"), names(testing))])
+# predict(svm_model, testing) gives me factor(0)
+```
+
+### Decision tree
+```{r}
+library(rpart)
+library(rattle)
+rpart_model <- rpart(classe ~
+                       pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
+                       roll_arm + roll_forearm + roll_dumbbell + roll_belt +
+                       yaw_arm + yaw_forearm + yaw_dumbbell + yaw_belt,
+                     data = training)
+fancyRpartPlot(rpart_model, sub = NULL)
+predict(rpart_model, testing)
+```
+
+### Random forests
+```{r}
+library(randomForest)
+rf_model <- randomForest(classe ~
+                           pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
+                           roll_arm + roll_forearm + roll_dumbbell + roll_belt +
+                           yaw_arm + yaw_forearm + yaw_dumbbell + yaw_belt,
+                         data = training)
+rf_model
+predict(rf_model, testing)
+rf_cv <- rfcv(training[,match(c("pitch_arm", "pitch_forearm", "pitch_dumbbell", "pitch_belt", "roll_arm", "roll_forearm", "roll_dumbbell", "roll_belt", "yaw_arm", "yaw_forearm", "yaw_dumbbell", "yaw_belt"), names(training))], training$classe, 10)
+rf_cv$error.cv
+```
+
+## General Discussion
+### Cross-validation and expected out-of-sample errors
+The `svm` function in e1071 package provides an argument for k-fold cross-validation of a SVM model. According to the result of 10-fold validation, the accuracy is about 45%, which is fairly good compared with a random guess - 1/5, 20%. However, the expected errors would be over 50%, and more than half of the predicted results would be incorrect.
+
+For decision tree, the predictions seem poor. The tree cannot generate some nodes separating the training data clearly. Identified categories appear in both sides of some nodes.
+
+If one tree is not enough, how about a forest? I used `rfcv` function to perform cross-validation of the built random forests. The errors show that, when using my selected 12 variables, the error can be reduced to about 0.009, which is less than 1%. Besides, the error drops remarkably when the used variable number increases from 1, 3, 6, to 12.
+
+### Prediction quality accessment
+I selected the random forests model. With that, I got 20/20 correct predictions for testing data.
+
+## Data Source
+The data are generously provided by [Groupware@LES](http://groupware.les.inf.puc-rio.br/har).
+
+## Related Published Paper
+* Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. [Qualitative Activity Recognition of Weight Lifting Exercises](http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201). Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13). Stuttgart, Germany: ACM SIGCHI, 2013.
