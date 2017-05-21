@@ -1,5 +1,5 @@
 ---
-title: "Predicting “How Well” People Perform Barbell Lifts"
+title: "Predicting “How Well” People Perform Dumbbell Lifts"
 author: "Yu-Zhen Tu"
 date: "2017/5/16"
 output: html_document
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.align = "center", comment = "", message =
 ```
 
 ## Background
-People often quantify _how much_ they perform exercises, but little investigation focuses on _how well_ they do exercises. This dataset is aimed to study how our body parts move when doing barbell lifts correctly. Further information about the data can be found in "Weight Lifting Exercises Dataset" section of the data source page below.
+People often quantify _how much_ they perform exercises, but little investigation focuses on _how well_ they do exercises. This dataset is aimed to study how our body parts move when doing dumbbell lifts correctly. Further information about the data can be found in "Weight Lifting Exercises Dataset" section of the data source page below.
 
 ## Importing Data
 ```{r}
@@ -22,7 +22,7 @@ str(testing)
 
 ## Data Analyses with Machine Learning Techniques
 ### Variable selection
-The "classe" variable in the training set indicates five types of doing barbell lifts, where only type A stands for exactly correct way and the other four types stand for common mistakes.
+The "classe" variable in the training set indicates five types of doing dumbbell lifts, where only type A stands for exactly correct way and the other four types stand for common mistakes.
 
 Here I would like to select pitch/roll/yaw degrees of arm/forearm/dumbbell/belt to discriminate the five types, because I think how the body parts move determines whether people are doing exercises correctly.
 
