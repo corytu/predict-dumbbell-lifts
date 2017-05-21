@@ -1,4 +1,4 @@
-# Predict-Barbell-Lifts
+# Predict-Dumbbell-Lifts
 _Prediction Assignment of "Practical Machine Learning" on Coursera_
 
 Main page: [Predicting “How Well” People Perform Dumbbell Lifts](https://corytu.github.io/Predict-Dumbbell-Lifts/Prediction_Assignment.html)<br>
