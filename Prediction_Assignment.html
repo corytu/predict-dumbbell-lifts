@@ -118,7 +118,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Predicting “How Well” People Perform Dumbbell Lifts</h1>
 <h4 class="author"><em>Yu-Zhen Tu</em></h4>
-<h4 class="date"><em>2017/5/16</em></h4>
+<h4 class="date"><em>2017/5/23</em></h4>
 
 </div>
 
@@ -346,6 +346,9 @@ str(training)</code></pre>
 <div id="support-vector-machine-svm" class="section level3">
 <h3>Support vector machine (SVM)</h3>
 <pre class="r"><code>library(e1071)
+# Create SVM
+# Method: C-classification and radial kernal
+# Parameters (default values): cost = 1 and gamma = (data dimension)^-1
 svm_model &lt;- svm(classe ~ pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
                    roll_arm + roll_forearm + roll_dumbbell + roll_belt +
                    yaw_arm + yaw_forearm + yaw_dumbbell + yaw_belt, data = training,
@@ -377,19 +380,20 @@ Levels:
 
 10-fold cross-validation on training data:
 
-Total Accuracy: 44.85781 
+Total Accuracy: 44.83233 
 Single Accuracies:
- 44.95413 45.158 44.59735 48.26707 44.16709 43.83282 43.88379 43.93476 43.93476 45.84819 </code></pre>
-<pre class="r"><code>predict(svm_model, testing[, match(c(&quot;pitch_arm&quot;, &quot;pitch_forearm&quot;, &quot;pitch_dumbbell&quot;, &quot;pitch_belt&quot;, &quot;roll_arm&quot;, &quot;roll_forearm&quot;, &quot;roll_dumbbell&quot;, &quot;roll_belt&quot;, &quot;yaw_arm&quot;, &quot;yaw_forearm&quot;, &quot;yaw_dumbbell&quot;, &quot;yaw_belt&quot;), names(testing))])</code></pre>
+ 44.44444 44.69929 44.54638 43.42508 45.38971 47.19674 44.85219 44.64832 43.52701 45.59348 </code></pre>
+<pre class="r"><code># predict(svm_model, testing) gives me factor(0)
+predict(svm_model, testing[, match(c(&quot;pitch_arm&quot;, &quot;pitch_forearm&quot;, &quot;pitch_dumbbell&quot;, &quot;pitch_belt&quot;, &quot;roll_arm&quot;, &quot;roll_forearm&quot;, &quot;roll_dumbbell&quot;, &quot;roll_belt&quot;, &quot;yaw_arm&quot;, &quot;yaw_forearm&quot;, &quot;yaw_dumbbell&quot;, &quot;yaw_belt&quot;), names(testing))])</code></pre>
 <pre><code> 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
  A  A  B  A  A  A  D  B  A  A  A  C  A  A  A  A  A  A  A  A 
 Levels: A B C D E</code></pre>
-<pre class="r"><code># predict(svm_model, testing) gives me factor(0)</code></pre>
 </div>
 <div id="decision-tree" class="section level3">
 <h3>Decision tree</h3>
 <pre class="r"><code>library(rpart)
 library(rattle)
+# Create a decision tree
 rpart_model &lt;- rpart(classe ~
                        pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
                        roll_arm + roll_forearm + roll_dumbbell + roll_belt +
@@ -423,6 +427,8 @@ fancyRpartPlot(rpart_model, sub = NULL)</code></pre>
 <div id="random-forests" class="section level3">
 <h3>Random forests</h3>
 <pre class="r"><code>library(randomForest)
+# Create random forests
+# Parameters (default values): mtry = sqrt(p)
 rf_model &lt;- randomForest(classe ~
                            pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
                            roll_arm + roll_forearm + roll_dumbbell + roll_belt +
@@ -436,22 +442,23 @@ Call:
                      Number of trees: 500
 No. of variables tried at each split: 3
 
-        OOB estimate of  error rate: 0.79%
+        OOB estimate of  error rate: 0.84%
 Confusion matrix:
      A    B    C    D    E class.error
-A 5571    7    0    1    1 0.001612903
-B   17 3729   48    2    1 0.017908875
-C    0   16 3386   18    2 0.010520164
-D    1    4   14 3195    2 0.006529851
-E    0    5   10    6 3586 0.005822013</code></pre>
+A 5568    8    0    3    1 0.002150538
+B   17 3732   44    3    1 0.017118778
+C    0   19 3378   23    2 0.012857978
+D    2    4   13 3195    2 0.006529851
+E    0    5   12    5 3585 0.006099251</code></pre>
 <pre class="r"><code>predict(rf_model, testing)</code></pre>
 <pre><code> 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
 Levels: A B C D E</code></pre>
-<pre class="r"><code>rf_cv &lt;- rfcv(training[,match(c(&quot;pitch_arm&quot;, &quot;pitch_forearm&quot;, &quot;pitch_dumbbell&quot;, &quot;pitch_belt&quot;, &quot;roll_arm&quot;, &quot;roll_forearm&quot;, &quot;roll_dumbbell&quot;, &quot;roll_belt&quot;, &quot;yaw_arm&quot;, &quot;yaw_forearm&quot;, &quot;yaw_dumbbell&quot;, &quot;yaw_belt&quot;), names(training))], training$classe, 10)
+<pre class="r"><code># Cross-validation for feature selection
+rf_cv &lt;- rfcv(training[,match(c(&quot;pitch_arm&quot;, &quot;pitch_forearm&quot;, &quot;pitch_dumbbell&quot;, &quot;pitch_belt&quot;, &quot;roll_arm&quot;, &quot;roll_forearm&quot;, &quot;roll_dumbbell&quot;, &quot;roll_belt&quot;, &quot;yaw_arm&quot;, &quot;yaw_forearm&quot;, &quot;yaw_dumbbell&quot;, &quot;yaw_belt&quot;), names(training))], training$classe, 10)
 rf_cv$error.cv</code></pre>
 <pre><code>         12           6           3           1 
-0.008918561 0.025175823 0.111813271 0.439098971 </code></pre>
+0.008867598 0.026246050 0.110029559 0.440424014 </code></pre>
 </div>
 </div>
 <div id="general-discussion" class="section level2">
@@ -459,13 +466,52 @@ rf_cv$error.cv</code></pre>
 <div id="cross-validation-and-expected-out-of-sample-errors" class="section level3">
 <h3>Cross-validation and expected out-of-sample errors</h3>
 <p>The <code>svm</code> function in e1071 package provides an argument for k-fold cross-validation of a SVM model. According to the result of 10-fold validation, the accuracy is about 45%, which is fairly good compared with a random guess - 1/5, 20%. However, the expected errors would be over 50%, and more than half of the predicted results would be incorrect.</p>
+<p>Theoretically, the best SVM parameters can be found with <code>tune</code>. However, the following codes cost so much computation resource for my laptop that the mission was not completed in ten hours. I believe the accuracy of SVM would be improved if I tuned “gamma” and “cost” appropriately.</p>
+<pre class="r"><code>svm_tune &lt;- tune(svm,
+                 classe ~ pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
+                   roll_arm + roll_forearm + roll_dumbbell + roll_belt +
+                   yaw_arm + yaw_forearm + yaw_dumbbell + yaw_belt,
+                 scale = FALSE,
+                 ranges = list(gamma = seq(0, 1, 0.05), cost = 2^(-1:5)),
+                 data = training[, match(c(&quot;classe&quot;, &quot;pitch_arm&quot;, &quot;pitch_forearm&quot;, &quot;pitch_dumbbell&quot;, &quot;pitch_belt&quot;, &quot;roll_arm&quot;, &quot;roll_forearm&quot;, &quot;roll_dumbbell&quot;, &quot;roll_belt&quot;, &quot;yaw_arm&quot;, &quot;yaw_forearm&quot;, &quot;yaw_dumbbell&quot;, &quot;yaw_belt&quot;), names(training))])</code></pre>
 <p>For decision tree, the predictions seem poor. The tree cannot generate some nodes separating the training data clearly. Identified categories appear in both sides of some nodes.</p>
-<p>If one tree is not enough, how about a forest? I used <code>rfcv</code> function to perform cross-validation of the built random forests. The errors show that, when using my selected 12 variables, the error can be reduced to about 0.009, which is less than 1%. Besides, the error drops remarkably when the used variable number increases from 1, 3, 6, to 12.</p>
+<p>If one tree is not enough, how about a forest? I used <code>rfcv</code> to perform cross-validation for feature selection of the built random forests. The errors show that, when using my selected 12 variables, the error can be reduced to about 0.009, which is less than 1%. Besides, the error drops remarkably when the used variable number increases from 1, 3, 6, to 12.</p>
 </div>
 <div id="prediction-quality-accessment" class="section level3">
 <h3>Prediction quality accessment</h3>
 <p>I selected the random forests model. With that, I got 20/20 correct predictions for testing data.</p>
 </div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session Information</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.0 (2017-04-21)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 7 x64 (build 7601) Service Pack 1
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=Chinese (Traditional)_Taiwan.950 
+[2] LC_CTYPE=Chinese (Traditional)_Taiwan.950   
+[3] LC_MONETARY=Chinese (Traditional)_Taiwan.950
+[4] LC_NUMERIC=C                                
+[5] LC_TIME=Chinese (Traditional)_Taiwan.950    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] randomForest_4.6-12 rattle_4.1.0        rpart_4.1-11       
+[4] e1071_1.6-8        
+
+loaded via a namespace (and not attached):
+ [1] rpart.plot_2.1.2   Rcpp_0.12.10       RGtk2_2.20.33     
+ [4] class_7.3-14       digest_0.6.12      rprojroot_1.2     
+ [7] backports_1.0.5    magrittr_1.5       evaluate_0.10     
+[10] stringi_1.1.5      rmarkdown_1.5      RColorBrewer_1.1-2
+[13] tools_3.4.0        stringr_1.2.0      yaml_2.1.14       
+[16] compiler_3.4.0     htmltools_0.3.6    knitr_1.16        </code></pre>
 </div>
 <div id="data-source" class="section level2">
 <h2>Data Source</h2>

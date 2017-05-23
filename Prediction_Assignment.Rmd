@@ -1,7 +1,7 @@
 ---
 title: "Predicting “How Well” People Perform Dumbbell Lifts"
 author: "Yu-Zhen Tu"
-date: "2017/5/16"
+date: "2017/5/23"
 output: html_document
 ---
 
@@ -29,19 +29,23 @@ Here I would like to select pitch/roll/yaw degrees of arm/forearm/dumbbell/belt 
 ### Support vector machine (SVM)
 ```{r}
 library(e1071)
+# Create SVM
+# Method: C-classification and radial kernal
+# Parameters (default values): cost = 1 and gamma = (data dimension)^-1
 svm_model <- svm(classe ~ pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
                    roll_arm + roll_forearm + roll_dumbbell + roll_belt +
                    yaw_arm + yaw_forearm + yaw_dumbbell + yaw_belt, data = training,
                  scale = FALSE, cross = 10)
 summary(svm_model)
-predict(svm_model, testing[, match(c("pitch_arm", "pitch_forearm", "pitch_dumbbell", "pitch_belt", "roll_arm", "roll_forearm", "roll_dumbbell", "roll_belt", "yaw_arm", "yaw_forearm", "yaw_dumbbell", "yaw_belt"), names(testing))])
 # predict(svm_model, testing) gives me factor(0)
+predict(svm_model, testing[, match(c("pitch_arm", "pitch_forearm", "pitch_dumbbell", "pitch_belt", "roll_arm", "roll_forearm", "roll_dumbbell", "roll_belt", "yaw_arm", "yaw_forearm", "yaw_dumbbell", "yaw_belt"), names(testing))])
 ```
 
 ### Decision tree
 ```{r}
 library(rpart)
 library(rattle)
+# Create a decision tree
 rpart_model <- rpart(classe ~
                        pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
                        roll_arm + roll_forearm + roll_dumbbell + roll_belt +
@@ -54,6 +58,8 @@ predict(rpart_model, testing)
 ### Random forests
 ```{r}
 library(randomForest)
+# Create random forests
+# Parameters (default values): mtry = sqrt(p)
 rf_model <- randomForest(classe ~
                            pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
                            roll_arm + roll_forearm + roll_dumbbell + roll_belt +
@@ -61,6 +67,7 @@ rf_model <- randomForest(classe ~
                          data = training)
 rf_model
 predict(rf_model, testing)
+# Cross-validation for feature selection
 rf_cv <- rfcv(training[,match(c("pitch_arm", "pitch_forearm", "pitch_dumbbell", "pitch_belt", "roll_arm", "roll_forearm", "roll_dumbbell", "roll_belt", "yaw_arm", "yaw_forearm", "yaw_dumbbell", "yaw_belt"), names(training))], training$classe, 10)
 rf_cv$error.cv
 ```
@@ -69,12 +76,28 @@ rf_cv$error.cv
 ### Cross-validation and expected out-of-sample errors
 The `svm` function in e1071 package provides an argument for k-fold cross-validation of a SVM model. According to the result of 10-fold validation, the accuracy is about 45%, which is fairly good compared with a random guess - 1/5, 20%. However, the expected errors would be over 50%, and more than half of the predicted results would be incorrect.
 
+Theoretically, the best SVM parameters can be found with `tune`. However, the following codes cost so much computation resource for my laptop that the mission was not completed in ten hours. I believe the accuracy of SVM would be improved if I tuned "gamma" and "cost" appropriately.
+```{r, eval = FALSE}
+svm_tune <- tune(svm,
+                 classe ~ pitch_arm + pitch_forearm + pitch_dumbbell + pitch_belt +
+                   roll_arm + roll_forearm + roll_dumbbell + roll_belt +
+                   yaw_arm + yaw_forearm + yaw_dumbbell + yaw_belt,
+                 scale = FALSE,
+                 ranges = list(gamma = seq(0, 1, 0.05), cost = 2^(-1:5)),
+                 data = training[, match(c("classe", "pitch_arm", "pitch_forearm", "pitch_dumbbell", "pitch_belt", "roll_arm", "roll_forearm", "roll_dumbbell", "roll_belt", "yaw_arm", "yaw_forearm", "yaw_dumbbell", "yaw_belt"), names(training))])
+```
+
 For decision tree, the predictions seem poor. The tree cannot generate some nodes separating the training data clearly. Identified categories appear in both sides of some nodes.
 
-If one tree is not enough, how about a forest? I used `rfcv` function to perform cross-validation of the built random forests. The errors show that, when using my selected 12 variables, the error can be reduced to about 0.009, which is less than 1%. Besides, the error drops remarkably when the used variable number increases from 1, 3, 6, to 12.
+If one tree is not enough, how about a forest? I used `rfcv` to perform cross-validation for feature selection of the built random forests. The errors show that, when using my selected 12 variables, the error can be reduced to about 0.009, which is less than 1%. Besides, the error drops remarkably when the used variable number increases from 1, 3, 6, to 12.
 
 ### Prediction quality accessment
 I selected the random forests model. With that, I got 20/20 correct predictions for testing data.
+
+## Session Information
+```{r}
+sessionInfo()
+```
 
 ## Data Source
 The data are generously provided by [Groupware@LES](http://groupware.les.inf.puc-rio.br/har).
